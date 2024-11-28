@@ -74,6 +74,12 @@ pub enum WebGLVersion {
     WebGL2,
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum WindowStartupLocation {
+    Center,
+    Manual(i32, i32),
+}
+
 /// Platform specific settings.
 #[derive(Debug)]
 pub struct Platform {
@@ -154,6 +160,10 @@ pub struct Conf {
     ///
     /// Default: 600
     pub window_height: i32,
+    /// Location of window when it gets loaded.
+    ///
+    /// Default: Center
+    pub window_startup_location: WindowStartupLocation,
     /// Whether the rendering canvas is full-resolution on HighDPI displays.
     ///
     /// Default: false
@@ -223,6 +233,7 @@ impl Default for Conf {
             window_title: "".to_owned(),
             window_width: 800,
             window_height: 600,
+            window_startup_location: WindowStartupLocation::Center,
             high_dpi: false,
             fullscreen: false,
             borderless: false,

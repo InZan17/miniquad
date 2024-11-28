@@ -157,8 +157,8 @@ impl LibX11 {
         let window = (self.XCreateWindow)(
             display,
             root,
-            0 as libc::c_int,
-            0 as libc::c_int,
+            100 as libc::c_int,
+            100 as libc::c_int,
             conf.window_width as _,
             conf.window_height as _,
             0 as libc::c_int as libc::c_uint,

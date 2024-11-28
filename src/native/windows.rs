@@ -1,5 +1,5 @@
 use crate::{
-    conf::{Conf, Icon},
+    conf::{Conf, Icon, WindowStartupLocation},
     event::{KeyMods, MouseButton},
     native::{NativeDisplayData, Request},
     CursorIcon, EventHandler,
@@ -231,6 +231,47 @@ fn get_win_style(is_fullscreen: bool, is_borderless: bool, is_resizable: bool) -
         }
 
         win_style
+    }
+}
+
+unsafe fn get_win_rect(
+    width: i32,
+    height: i32,
+    window_startup_location: WindowStartupLocation,
+) -> RECT {
+    match window_startup_location {
+        WindowStartupLocation::Center => {
+            let cursor_pos = POINT { x: 0, y: 0 };
+            GetCursorPos(&cursor_pos as *const _ as _);
+
+            let h_monitor = MonitorFromPoint(cursor_pos, MONITOR_DEFAULTTONEAREST);
+
+            let mut monitor_info: MONITORINFO = std::mem::zeroed();
+            monitor_info.cbSize = std::mem::size_of::<MONITORINFO>() as _;
+            let success = GetMonitorInfoW(h_monitor, &monitor_info as *const _ as _);
+
+            assert!(success != 0);
+
+            let monitor_width = monitor_info.rcMonitor.right - monitor_info.rcMonitor.left;
+            let monitor_height = monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top;
+            let monitor_x = monitor_info.rcMonitor.left;
+            let monitor_y = monitor_info.rcMonitor.top;
+
+            return RECT {
+                left: (monitor_width - width) / 2 + monitor_x,
+                top: (monitor_height - height) / 2 + monitor_y,
+                right: (monitor_width + width) / 2 + monitor_x,
+                bottom: (monitor_height + height) / 2 + monitor_y,
+            };
+        }
+        WindowStartupLocation::Manual(x, y) => {
+            return RECT {
+                left: x,
+                top: y,
+                right: x + width,
+                bottom: y + height,
+            };
+        }
     }
 }
 
@@ -630,6 +671,7 @@ unsafe fn create_window(
     window_title: &str,
     fullscreen: bool,
     borderless: bool,
+    window_startup_location: WindowStartupLocation,
     resizable: bool,
     width: i32,
     height: i32,
@@ -649,24 +691,23 @@ unsafe fn create_window(
 
     let win_style: DWORD = get_win_style(fullscreen, borderless, resizable);
     let win_ex_style: DWORD = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
-    let mut rect = RECT {
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
+    let rect = if fullscreen {
+        RECT {
+            left: 0,
+            top: 0,
+            right: GetSystemMetrics(SM_CXSCREEN),
+            bottom: GetSystemMetrics(SM_CYSCREEN),
+        }
+    } else {
+        get_win_rect(width, height, window_startup_location)
     };
 
-    if fullscreen {
-        rect.right = GetSystemMetrics(SM_CXSCREEN);
-        rect.bottom = GetSystemMetrics(SM_CYSCREEN);
-    } else {
-        rect.right = width;
-        rect.bottom = height;
-    }
-
     AdjustWindowRectEx(&rect as *const _ as _, win_style, false as _, win_ex_style);
+
     let win_width = rect.right - rect.left;
     let win_height = rect.bottom - rect.top;
+    let win_x = rect.left;
+    let win_y = rect.top;
     let class_name = "MINIQUADAPP\0".encode_utf16().collect::<Vec<u16>>();
     let mut window_name = window_title.encode_utf16().collect::<Vec<u16>>();
     window_name.push(0);
@@ -675,8 +716,8 @@ unsafe fn create_window(
         class_name.as_ptr(),         // lpClassName
         window_name.as_ptr(),        // lpWindowName
         win_style,                   // dwStyle
-        CW_USEDEFAULT,               // X
-        CW_USEDEFAULT,               // Y
+        win_x,                       // X
+        win_y,                       // Y
         win_width,                   // nWidth
         win_height,                  // nHeight
         NULL as _,                   // hWndParent
@@ -878,6 +919,7 @@ where
             &conf.window_title,
             conf.fullscreen,
             conf.borderless,
+            conf.window_startup_location,
             conf.window_resizable,
             conf.window_width as _,
             conf.window_height as _,

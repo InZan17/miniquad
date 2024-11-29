@@ -932,8 +932,8 @@ where
 
         let (msg_wnd, msg_dc) = create_msg_window();
         let mut display = WindowsDisplay {
-            fullscreen: false,
-            borderless: false,
+            fullscreen: conf.fullscreen,
+            borderless: conf.borderless,
             dpi_aware: false,
             window_resizable: conf.window_resizable,
             cursor_grabbed: false,

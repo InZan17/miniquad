@@ -1082,6 +1082,7 @@ impl ContextInfo {
 
 pub trait RenderingBackend {
     fn info(&self) -> ContextInfo;
+    unsafe fn flush(&self) {}
     /// For metal context's ShaderSource should contain MSL source string, for GL - glsl.
     /// If in doubt, _most_ OpenGL contexts support "#version 100" glsl shaders.
     /// So far miniquad never encountered where it can create a rendering context, but `version 100` shaders are not supported.

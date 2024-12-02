@@ -825,6 +825,10 @@ impl RenderingBackend for GlContext {
         self.info.clone()
     }
 
+    unsafe fn flush(&self) {
+        glFlush();
+    }
+
     fn new_shader(
         &mut self,
         shader: ShaderSource,

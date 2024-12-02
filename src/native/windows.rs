@@ -986,9 +986,6 @@ where
 
         let mut done = false;
         while !(done || crate::native_display().lock().unwrap().quit_ordered) {
-            while let Ok(request) = rx.try_recv() {
-                display.process_request(request);
-            }
 
             display.update_screen_mouse_position();
 
@@ -1015,6 +1012,10 @@ where
                 display.update_requested = false;
                 display.event_handler.as_mut().unwrap().update();
                 display.event_handler.as_mut().unwrap().draw();
+
+                while let Ok(request) = rx.try_recv() {
+                    display.process_request(request);
+                }
 
                 SwapBuffers(display.dc);
             }

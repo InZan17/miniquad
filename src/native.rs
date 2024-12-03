@@ -66,6 +66,7 @@ impl NativeDisplayData {
 #[derive(Debug)]
 pub(crate) enum Request {
     ScheduleUpdate,
+    SetSwapInterval(i32),
     SetCursorGrab(bool),
     ShowMouse(bool),
     SetMouseCursor(crate::CursorIcon),

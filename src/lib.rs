@@ -265,6 +265,13 @@ pub mod window {
         d.screen_mouse_position
     }
 
+    pub fn set_swap_interval(interval: i32) {
+        let d = native_display().lock().unwrap();
+        d.native_requests
+            .send(native::Request::SetSwapInterval(interval))
+            .unwrap();
+    }
+
     pub fn set_fullscreen(fullscreen: bool) {
         let d = native_display().lock().unwrap();
         d.native_requests

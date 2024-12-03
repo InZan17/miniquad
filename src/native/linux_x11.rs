@@ -398,6 +398,9 @@ impl X11Display {
                 ScheduleUpdate => {
                     self.update_requested = true;
                 }
+                SetSwapInterval(_) => {
+                    eprintln!("Not implemented for X11")
+                }
                 SetCursorGrab(grab) => self.set_cursor_grab(self.window, grab),
                 ShowMouse(show) => self.show_mouse(show),
                 SetMouseCursor(icon) => self.set_cursor(self.window, Some(icon)),

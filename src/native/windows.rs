@@ -31,6 +31,7 @@ use libopengl32::LibOpengl32;
 pub(crate) struct WindowsDisplay {
     fullscreen: bool,
     borderless: bool,
+    swap_interval: i32,
     dpi_aware: bool,
     window_resizable: bool,
     cursor_grabbed: bool,
@@ -889,6 +890,9 @@ impl WindowsDisplay {
                 ScheduleUpdate => {
                     self.update_requested = true;
                 }
+                SetSwapInterval(interval) => {
+                    self.swap_interval = interval;
+                }
                 SetCursorGrab(grab) => self.set_cursor_grab(grab),
                 ShowMouse(show) => self.show_mouse(show),
                 SetMouseCursor(icon) => self.set_mouse_cursor(icon),
@@ -934,6 +938,7 @@ where
         let mut display = WindowsDisplay {
             fullscreen: conf.fullscreen,
             borderless: conf.borderless,
+            swap_interval: conf.platform.swap_interval.unwrap_or(1),
             dpi_aware: false,
             window_resizable: conf.window_resizable,
             cursor_grabbed: false,
@@ -968,6 +973,8 @@ where
 
         display.update_dimensions(wnd);
 
+        let mut last_swap_interval = display.swap_interval;
+
         let mut wgl = wgl::Wgl::new(&mut display);
         let gl_ctx = wgl.create_context(
             &mut display,
@@ -986,7 +993,6 @@ where
 
         let mut done = false;
         while !(done || crate::native_display().lock().unwrap().quit_ordered) {
-
             display.update_screen_mouse_position();
 
             let mut dispatch_message = |mut msg: MSG| {
@@ -1015,6 +1021,13 @@ where
 
                 while let Ok(request) = rx.try_recv() {
                     display.process_request(request);
+                }
+
+                if display.swap_interval != last_swap_interval {
+                    last_swap_interval = display.swap_interval;
+                    if wgl.ext_swap_control {
+                        (wgl.SwapIntervalEXT.unwrap())(display.swap_interval);
+                    }
                 }
 
                 SwapBuffers(display.dc);

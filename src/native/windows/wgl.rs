@@ -191,12 +191,12 @@ pub struct Wgl {
     GetExtensionsStringEXT: Option<GetExtensionsStringEXT>,
     GetExtensionsStringARB: Option<GetExtensionsStringARB>,
     CreateContextAttribsARB: Option<CreateContextAttribsARB>,
-    SwapIntervalEXT: Option<SwapIntervalEXT>,
+    pub SwapIntervalEXT: Option<SwapIntervalEXT>,
 
     arb_multisample: bool,
     arb_create_context: bool,
     arb_create_context_profile: bool,
-    ext_swap_control: bool,
+    pub ext_swap_control: bool,
     arb_pixel_format: bool,
 }
 

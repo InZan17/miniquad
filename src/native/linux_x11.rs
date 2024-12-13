@@ -135,7 +135,7 @@ impl X11Display {
                 let mut d = crate::native_display().try_lock().unwrap();
                 let left = (*event).xconfigure.x;
                 let top = (*event).xconfigure.y;
-                d.screen_position = (left as _, top as _);
+                d.screen_position = (left, top);
                 if (*event).xconfigure.width != d.screen_width
                     || (*event).xconfigure.height != d.screen_height
                 {
@@ -409,7 +409,7 @@ impl X11Display {
                     new_height,
                 } => self.set_window_size(self.window, new_width as _, new_height as _),
                 SetWindowPosition { new_x, new_y } => {
-                    self.set_window_position(self.window, new_x as _, new_y as _)
+                    self.set_window_position(self.window, new_x, new_y)
                 }
                 SetFullscreen(fullscreen) => self.set_fullscreen(self.window, fullscreen),
                 SetBorderless(borderless) => self.set_borderless(self.window, borderless),

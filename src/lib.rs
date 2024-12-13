@@ -244,7 +244,7 @@ pub mod window {
             .unwrap();
     }
 
-    pub fn set_window_position(new_x: u32, new_y: u32) {
+    pub fn set_window_position(new_x: i32, new_y: i32) {
         let d = native_display().lock().unwrap();
         d.native_requests
             .send(native::Request::SetWindowPosition { new_x, new_y })
@@ -254,7 +254,7 @@ pub mod window {
     /// Get the position of the window.
     /// TODO: implement for other platforms
     #[cfg(any(target_os = "windows", target_os = "linux"))]
-    pub fn get_window_position() -> (u32, u32) {
+    pub fn get_window_position() -> (i32, i32) {
         let d = native_display().lock().unwrap();
         d.screen_position
     }

@@ -134,23 +134,13 @@ impl WindowsDisplay {
         };
     }
     /// Set the window position in screen coordinates.
-    fn set_window_position(&mut self, new_x: u32, new_y: u32) {
+    fn set_window_position(&mut self, new_x: i32, new_y: i32) {
         let mut rect: RECT = unsafe { std::mem::zeroed() };
         if unsafe { GetClientRect(self.wnd, &mut rect as *mut _ as _) } != 0 {
             let mut new_rect = rect;
-            new_rect.right = new_rect.right - new_rect.left + new_x as i32;
-            new_rect.bottom = new_rect.bottom - new_rect.top + new_y as i32;
-            unsafe {
-                SetWindowPos(
-                    self.wnd,
-                    HWND_TOP,
-                    new_x as i32,
-                    new_y as i32,
-                    0,
-                    0,
-                    SWP_NOSIZE,
-                )
-            };
+            new_rect.right = new_rect.right - new_rect.left + new_x;
+            new_rect.bottom = new_rect.bottom - new_rect.top + new_y;
+            unsafe { SetWindowPos(self.wnd, HWND_TOP, new_x, new_y, 0, 0, SWP_NOSIZE) };
         }
     }
 
@@ -831,8 +821,8 @@ impl WindowsDisplay {
                 }
 
                 // Check for position changes
-                if (rect.left as u32, rect.top as u32) != d.screen_position {
-                    d.screen_position = (rect.left as u32, rect.top as u32);
+                if (rect.left, rect.top) != d.screen_position {
+                    d.screen_position = (rect.left, rect.top);
                     return true;
                 }
             } else {

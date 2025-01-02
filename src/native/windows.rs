@@ -732,7 +732,6 @@ unsafe fn create_window(
         "Win32: failed to register for raw mouse input!"
     );
 
-    ShowWindow(hwnd, SW_SHOW);
     let dc = GetDC(hwnd);
     assert!(dc.is_null() == false);
 
@@ -981,6 +980,7 @@ where
         #[cfg(target_arch = "i686")]
         SetWindowLong(wnd, GWLP_USERDATA, &mut display as *mut _ as isize);
 
+        let mut has_rendered = false;
         let mut done = false;
         while !(done || crate::native_display().lock().unwrap().quit_ordered) {
             display.update_screen_mouse_position();
@@ -1021,6 +1021,11 @@ where
                 }
 
                 SwapBuffers(display.dc);
+
+                if !has_rendered {
+                    has_rendered = true;
+                    ShowWindow(display.wnd, SW_SHOW);
+                }
             }
 
             if display.update_dimensions(wnd) {

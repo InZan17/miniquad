@@ -45,6 +45,7 @@ pub struct X11Display {
     repeated_keycodes: [bool; 256],
     empty_cursor: libx11::Cursor,
     cursor_cache: HashMap<CursorIcon, libx11::Cursor>,
+    swap_interval: i32,
     update_requested: bool,
 }
 
@@ -398,8 +399,8 @@ impl X11Display {
                 ScheduleUpdate => {
                     self.update_requested = true;
                 }
-                SetSwapInterval(_) => {
-                    eprintln!("Not implemented for X11")
+                SetSwapInterval(interval) => {
+                    self.swap_interval = interval;
                 }
                 SetCursorGrab(grab) => self.set_cursor_grab(self.window, grab),
                 ShowMouse(show) => self.show_mouse(show),
@@ -448,6 +449,8 @@ where
         glx_context,
         conf.platform.swap_interval.unwrap_or(1),
     );
+    let mut last_swap_interval = display.swap_interval;
+
     gl::load_gl_funcs(|proc| glx.libgl.get_procaddr(proc));
 
     display.libx11.show_window(display.display, display.window);
@@ -507,6 +510,16 @@ where
             display.update_requested = false;
             event_handler.update();
             event_handler.draw();
+
+            if display.swap_interval != last_swap_interval {
+                last_swap_interval = display.swap_interval;
+                glx.swap_interval(
+                    display.display,
+                    glx_window,
+                    glx_context,
+                    display.swap_interval,
+                );
+            }
 
             glx.swap_buffers(display.display, glx_window);
             (display.libx11.XFlush)(display.display);
@@ -674,6 +687,7 @@ where
             libxi,
             repeated_keycodes: [false; 256],
             cursor_cache: HashMap::new(),
+            swap_interval: conf.platform.swap_interval.unwrap_or(1),
             update_requested: true,
         };
 

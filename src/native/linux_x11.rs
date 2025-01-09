@@ -453,8 +453,6 @@ where
 
     gl::load_gl_funcs(|proc| glx.libgl.get_procaddr(proc));
 
-    display.libx11.show_window(display.display, display.window);
-
     (display.libx11.XFlush)(display.display);
 
     let (w, h) = display
@@ -479,6 +477,8 @@ where
     if conf.borderless {
         display.set_borderless(display.window, true);
     }
+
+    let mut has_rendered = false;
 
     let mut event_handler = (f.take().unwrap())();
 
@@ -522,6 +522,11 @@ where
             }
 
             glx.swap_buffers(display.display, glx_window);
+
+            if !has_rendered {
+                has_rendered = true;
+                display.libx11.show_window(display.display, display.window);
+            }
             (display.libx11.XFlush)(display.display);
         }
     }

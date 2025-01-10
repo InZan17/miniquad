@@ -485,9 +485,6 @@ where
     let mut event_handler = (f.take().unwrap())();
 
     while !crate::native_display().try_lock().unwrap().quit_ordered {
-        while let Ok(request) = rx.try_recv() {
-            display.process_request(request);
-        }
         glx.make_current(display.display, glx_window, glx_context);
 
         display.update_screen_mouse_position();
@@ -512,6 +509,10 @@ where
             display.update_requested = false;
             event_handler.update();
             event_handler.draw();
+
+            while let Ok(request) = rx.try_recv() {
+                display.process_request(request);
+            }
 
             if display.swap_interval != last_swap_interval {
                 last_swap_interval = display.swap_interval;

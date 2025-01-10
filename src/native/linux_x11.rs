@@ -45,6 +45,7 @@ pub struct X11Display {
     repeated_keycodes: [bool; 256],
     empty_cursor: libx11::Cursor,
     cursor_cache: HashMap<CursorIcon, libx11::Cursor>,
+    resizable: bool,
     swap_interval: i32,
     update_requested: bool,
 }
@@ -313,6 +314,7 @@ impl X11Display {
     }
 
     unsafe fn set_window_size(&mut self, window: Window, new_width: i32, new_height: i32) {
+        self.libx11.update_window_hints(self.display, window, self.resizable, new_width, new_height);
         (self.libx11.XResizeWindow)(self.display, window, new_width, new_height);
         (self.libx11.XFlush)(self.display);
     }
@@ -692,6 +694,7 @@ where
             libxi,
             repeated_keycodes: [false; 256],
             cursor_cache: HashMap::new(),
+            resizable: conf.window_resizable,
             swap_interval: conf.platform.swap_interval.unwrap_or(1),
             update_requested: true,
         };

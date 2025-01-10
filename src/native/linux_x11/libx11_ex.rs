@@ -151,6 +151,28 @@ impl LibX11 {
         );
     }
 
+    pub unsafe fn update_window_hints(
+        &mut self,
+        display: *mut Display,
+        window: Window,
+        resizable: bool,
+        width: i32,
+        height: i32,
+    ) {
+        let hints = (self.XAllocSizeHints)();
+        (*hints).flags |= PWinGravity;
+        if resizable {
+            (*hints).flags |= PMinSize | PMaxSize;
+            (*hints).min_width = width;
+            (*hints).min_height = height;
+            (*hints).max_width = width;
+            (*hints).max_height = height;
+        }
+        (*hints).win_gravity = StaticGravity;
+        (self.XSetWMNormalHints)(display, window, hints);
+        (self.XFree)(hints as *mut libc::c_void);
+    }
+
     pub unsafe fn create_window(
         &mut self,
         root: Window,
@@ -221,18 +243,14 @@ impl LibX11 {
 
         let mut protocols: [Atom; 1] = [self.extensions.wm_delete_window];
         (self.XSetWMProtocols)(display, window, protocols.as_mut_ptr(), 1 as libc::c_int);
-        let hints = (self.XAllocSizeHints)();
-        (*hints).flags |= PWinGravity;
-        if conf.window_resizable == false {
-            (*hints).flags |= PMinSize | PMaxSize;
-            (*hints).min_width = conf.window_width;
-            (*hints).min_height = conf.window_height;
-            (*hints).max_width = conf.window_width;
-            (*hints).max_height = conf.window_height;
-        }
-        (*hints).win_gravity = StaticGravity;
-        (self.XSetWMNormalHints)(display, window, hints);
-        (self.XFree)(hints as *mut libc::c_void);
+
+        self.update_window_hints(
+            display,
+            window,
+            conf.window_resizable,
+            conf.window_width,
+            conf.window_height,
+        );
 
         if let Some(ref icon) = conf.icon {
             self.update_window_icon(display, window, icon);
